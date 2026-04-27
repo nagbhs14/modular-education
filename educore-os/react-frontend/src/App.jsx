@@ -17,123 +17,83 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [isGlobal, setIsGlobal] = useState(false);
 
-  const determineTenant = async () => {
+  useEffect(() => {
     const host = window.location.hostname;
     let subdomain = null;
     if (host.includes('.')) {
       const parts = host.split('.');
-      if (parts[0] !== 'www' && parts[0] !== 'localhost') {
-        subdomain = parts[0];
-      }
+      if (parts[0] !== 'www' && parts[0] !== 'localhost') subdomain = parts[0];
     }
+    if (!subdomain) { setIsGlobal(true); setLoading(false); return; }
 
-    if (!subdomain) {
-      setIsGlobal(true);
-      setLoading(false);
-      return;
-    }
+    // Set base URL for all API calls
+    const apiBase = `http://${host}:3000`;
+    axios.defaults.baseURL = apiBase;
 
-    try {
-      const apiUrl = `http://${host}:3000`;
-      axios.defaults.baseURL = apiUrl;
+    // Fetch tenant name
+    axios.get(`http://localhost:3000/tenants/check/${subdomain}`)
+      .then(r => setTenant(r.data))
+      .catch(() => setTenant({ subdomain }));
 
-      // Fetch tenant info (public endpoint)
-      let tenantInfo = { subdomain };
+    // Check stored tokens
+    const adminToken = localStorage.getItem(`admin_token_${subdomain}`);
+    const studentToken = localStorage.getItem(`student_token_${subdomain}`);
+    const token = adminToken || studentToken;
+
+    if (token) {
       try {
-        const tRes = await axios.get(`http://localhost:3000/tenants/check/${subdomain}`);
-        tenantInfo = tRes.data;
-      } catch(e) { /* tenant might not exist yet */ }
-
-      const adminToken = localStorage.getItem(`admin_token_${subdomain}`);
-      const studentToken = localStorage.getItem(`student_token_${subdomain}`);
-      const token = adminToken || studentToken;
-
-      if (token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        try {
-          const userPayload = JSON.parse(atob(token.split('.')[1]));
-          // Check if token is expired
-          if (userPayload.exp * 1000 < Date.now()) {
-            localStorage.removeItem(`admin_token_${subdomain}`);
-            localStorage.removeItem(`student_token_${subdomain}`);
-          } else {
-            setUser({ ...userPayload, tokenType: adminToken ? 'admin' : 'student' });
-          }
-        } catch(e) {
+        const p = JSON.parse(atob(token.split('.')[1]));
+        if (p.exp * 1000 < Date.now()) {
           localStorage.removeItem(`admin_token_${subdomain}`);
           localStorage.removeItem(`student_token_${subdomain}`);
+        } else {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          setUser(p);
         }
+      } catch(e) {
+        localStorage.removeItem(`admin_token_${subdomain}`);
+        localStorage.removeItem(`student_token_${subdomain}`);
       }
-
-      setTenant(tenantInfo);
-    } catch(err) {
-      console.error(err);
-      setTenant(null);
-    } finally {
-      setLoading(false);
     }
-  };
+    setLoading(false);
+  }, []);
 
-  useEffect(() => { determineTenant(); }, []);
+  const getSub = () => window.location.hostname.split('.')[0];
 
   const loginAdmin = (token) => {
-    const sub = window.location.hostname.split('.')[0];
-    localStorage.setItem(`admin_token_${sub}`, token);
-    window.location.href = '/admin';
+    localStorage.setItem(`admin_token_${getSub()}`, token);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const p = JSON.parse(atob(token.split('.')[1]));
+    setUser(p);
   };
 
   const loginStudent = (token) => {
-    const sub = window.location.hostname.split('.')[0];
-    localStorage.setItem(`student_token_${sub}`, token);
-    window.location.href = '/student';
+    localStorage.setItem(`student_token_${getSub()}`, token);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const p = JSON.parse(atob(token.split('.')[1]));
+    setUser(p);
   };
 
   const logout = () => {
-    const sub = window.location.hostname.split('.')[0];
-    localStorage.removeItem(`admin_token_${sub}`);
-    localStorage.removeItem(`student_token_${sub}`);
+    localStorage.removeItem(`admin_token_${getSub()}`);
+    localStorage.removeItem(`student_token_${getSub()}`);
     delete axios.defaults.headers.common['Authorization'];
-    window.location.href = '/';
+    setUser(null);
   };
 
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', color: '#1a1a1a', fontFamily: "'Inter', sans-serif" }}>
-        <div style={{ color: '#9ca3af', fontSize: '13px' }}>Loading...</div>
-      </div>
-    );
-  }
-
+  if (loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#f8fafc',fontFamily:"'Plus Jakarta Sans',sans-serif"}}><p style={{color:'#94a3b8'}}>Loading...</p></div>;
   if (isGlobal) return <GlobalLanding />;
-
-  if (!tenant) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', color: '#1a1a1a', fontFamily: "'Inter', sans-serif" }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '36px', fontWeight: 700, color: '#dc2626' }}>404</div>
-          <div style={{ color: '#6b7280', marginTop: '4px' }}>Institution not found</div>
-        </div>
-      </div>
-    );
-  }
+  if (!tenant) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#f8fafc'}}><div style={{textAlign:'center'}}><div style={{fontSize:'32px',fontWeight:700,color:'#dc2626'}}>404</div><p style={{color:'#64748b'}}>Institution not found</p></div></div>;
 
   return (
     <TenantContext.Provider value={tenant}>
       <AuthContext.Provider value={{ user, loginAdmin, loginStudent, logout }}>
         <Router>
           <Routes>
-            <Route path="/" element={
-              user && (user.role === 'admin' || user.role === 'teacher') ? <Navigate to="/admin" /> : <AdminLogin />
-            } />
-            <Route path="/student-login" element={
-              user && user.role === 'student' ? <Navigate to="/student" /> : <StudentLogin />
-            } />
-            <Route path="/admin/*" element={
-              user && (user.role === 'admin' || user.role === 'teacher') ? <AdminDashboard /> : <Navigate to="/" />
-            } />
-            <Route path="/student/*" element={
-              user && user.role === 'student' ? <StudentDashboard /> : <Navigate to="/student-login" />
-            } />
+            <Route path="/" element={user && (user.role==='admin'||user.role==='teacher') ? <Navigate to="/admin" /> : <AdminLogin />} />
+            <Route path="/student-login" element={user && user.role==='student' ? <Navigate to="/student" /> : <StudentLogin />} />
+            <Route path="/admin/*" element={user && (user.role==='admin'||user.role==='teacher') ? <AdminDashboard /> : <Navigate to="/" />} />
+            <Route path="/student/*" element={user && user.role==='student' ? <StudentDashboard /> : <Navigate to="/student-login" />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>
