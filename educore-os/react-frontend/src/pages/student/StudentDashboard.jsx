@@ -210,73 +210,6 @@ const AssignmentsPage = () => {
   </div>);
 };
 
-/* ─── AI Assistant (Student) ─── */
-const AIAssistant = () => {
-  const [topic, setTopic] = useState(''); const [explanation, setExplanation] = useState('');
-  const [content, setContent] = useState(''); const [quiz, setQuiz] = useState(null);
-  const [file, setFile] = useState(null); const [visionPrompt, setVisionPrompt] = useState('Analyze this diagram and explain the key concepts.'); const [analysis, setAnalysis] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const getExplanation = async () => { if(!topic) return; setLoading(true); try { const r = await axios.post('/api/ai/explain', { topic }); setExplanation(r.data.explanation); } catch(e) { alert('Failed'); } setLoading(false); };
-  const getQuiz = async () => { if(!content) return; setLoading(true); try { const r = await axios.post('/api/ai/quiz', { content, count: 5 }); setQuiz(r.data.questions); } catch(e) { alert('Failed'); } setLoading(false); };
-  const analyzeVision = async () => {
-    if(!file) return; setLoading(true); const fd = new FormData(); fd.append('image', file); fd.append('prompt', visionPrompt);
-    try { const r = await axios.post('/api/ai/vision', fd, { headers: { 'Content-Type': 'multipart/form-data' } }); setAnalysis(r.data.analysis); } catch(e) { alert('Failed'); } setLoading(false);
-  };
-
-  return (
-    <div>
-      <div className="mb-8 relative">
-        <div className="glow-accent -top-10 -left-10"></div>
-        <h2 className="text-3xl font-bold font-h1 text-transparent bg-clip-text bg-gradient-to-r from-secondary to-primary mb-2">Lumina AI Study Buddy</h2>
-        <p className="font-body-lg text-on-surface-variant">Get explanations, practice quizzes, and analyze diagrams to help you study.</p>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-8 mb-8">
-        <GlassCard className="flex flex-col">
-          <h3 className="text-xl font-semibold mb-4 text-on-surface font-h3 flex items-center gap-2"><span className="material-symbols-outlined text-primary">menu_book</span> Ask AI Explainer</h3>
-          <input placeholder="What do you want to learn? (e.g., Quantum Physics)" className="w-full bg-surface-container-highest border border-outline-variant/50 p-3 rounded-lg text-on-surface focus:border-primary transition mb-4" value={topic} onChange={e=>setTopic(e.target.value)}/>
-          <button onClick={getExplanation} disabled={loading} className="bg-primary hover:bg-primary-fixed-dim text-on-primary py-2 px-6 rounded-lg font-label-sm transition disabled:opacity-50">Explain It To Me</button>
-          {explanation && <div className="mt-4 p-4 bg-surface-container-low rounded-lg border border-outline-variant/30 text-on-surface whitespace-pre-line text-sm max-h-64 overflow-y-auto">{explanation}</div>}
-        </GlassCard>
-
-        <GlassCard className="flex flex-col">
-          <h3 className="text-xl font-semibold mb-4 text-on-surface font-h3 flex items-center gap-2"><span className="material-symbols-outlined text-secondary">quiz</span> Practice Quiz</h3>
-          <textarea placeholder="Paste your study notes here to generate a practice quiz..." rows={3} className="w-full bg-surface-container-highest border border-outline-variant/50 p-3 rounded-lg text-on-surface focus:border-primary transition mb-4" value={content} onChange={e=>setContent(e.target.value)}/>
-          <button onClick={getQuiz} disabled={loading} className="bg-secondary hover:bg-secondary-fixed-dim text-on-secondary py-2 px-6 rounded-lg font-label-sm transition disabled:opacity-50">Generate Quiz</button>
-          {quiz && (
-            <div className="mt-4 p-4 bg-surface-container-low rounded-lg border border-outline-variant/30 text-on-surface text-sm max-h-64 overflow-y-auto space-y-4">
-              {quiz.map((q, i) => (
-                <div key={i}>
-                  <p className="font-semibold">{i+1}. {q.question}</p>
-                  <ul className="pl-4 list-disc text-outline mt-1 space-y-1">
-                    {q.options.map((opt, j) => <li key={j} className={j === q.answer ? 'text-secondary font-medium' : ''}>{opt}</li>)}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-        </GlassCard>
-      </div>
-
-      <GlassCard>
-         <h3 className="text-xl font-semibold mb-4 text-on-surface font-h3 flex items-center gap-2"><span className="material-symbols-outlined text-tertiary-fixed">document_scanner</span> Visual Analysis</h3>
-         <p className="text-sm text-on-surface-variant mb-4">Upload a picture of a diagram or a math problem for AI help.</p>
-         <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <FileUpload file={file} onFileSelect={setFile} onRemove={()=>setFile(null)} compact={true} />
-              <textarea placeholder="What do you want to know about this image?" rows={2} className="w-full bg-surface-container-highest border border-outline-variant/50 p-3 rounded-lg text-on-surface focus:border-primary transition mt-4 mb-4" value={visionPrompt} onChange={e=>setVisionPrompt(e.target.value)}/>
-              <button onClick={analyzeVision} disabled={loading||!file} className="bg-tertiary-fixed hover:bg-tertiary-fixed-dim text-on-tertiary-fixed py-2 px-6 rounded-lg font-label-sm transition disabled:opacity-50 w-full">Analyze Image</button>
-            </div>
-            <div>
-              {analysis ? <div className="p-4 bg-surface-container-low rounded-lg border border-outline-variant/30 text-on-surface whitespace-pre-line text-sm h-full overflow-y-auto">{analysis}</div> : <div className="h-full flex items-center justify-center border border-dashed border-outline-variant/30 rounded-lg text-outline text-sm">Analysis results will appear here</div>}
-            </div>
-         </div>
-      </GlassCard>
-    </div>
-  );
-};
-
 /* ─── Student Dashboard Shell ─── */
 const StudentDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -289,7 +222,6 @@ const StudentDashboard = () => {
     { key: 'results', label: 'Results', icon: 'fact_check' },
     { key: 'attendance', label: 'Attendance', icon: 'how_to_reg' },
     { key: 'chat', label: 'Chat w/ Teacher', icon: 'chat' },
-    { key: 'ai', label: 'AI Buddy', icon: 'smart_toy' },
   ];
 
   const renderPage = () => {
@@ -299,7 +231,6 @@ const StudentDashboard = () => {
       case 'results': return <Results/>;
       case 'attendance': return <AttendancePage/>;
       case 'chat': return <ChatPage/>;
-      case 'ai': return <AIAssistant/>;
       default: return <AssignmentsPage/>;
     }
   };

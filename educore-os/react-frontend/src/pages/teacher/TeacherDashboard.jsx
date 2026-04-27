@@ -263,73 +263,6 @@ const ChatPage = () => {
     <GlassCard className="flex-1 flex flex-col !p-0">{selected?<><div className="p-5 border-b border-outline-variant/30 font-semibold text-on-surface bg-surface-container-low font-h3">{selected.name}</div><div className="flex-1 overflow-y-auto p-6 space-y-4">{messages.map(m=><div key={m.id} className={`max-w-md p-3.5 rounded-2xl text-sm ${m.sender_name===selected.name?'bg-surface-container-high text-on-surface rounded-tl-sm':'bg-primary text-on-primary ml-auto rounded-tr-sm'}`}><p className="leading-relaxed">{m.message}</p><p className={`text-[10px] mt-1.5 ${m.sender_name===selected.name?'text-outline':'text-on-primary/70'}`}>{new Date(m.created_at).toLocaleTimeString()}</p></div>)}</div><form onSubmit={send} className="p-4 border-t border-outline-variant/30 bg-surface-container-low flex gap-3"><input className="flex-1 bg-surface-container-highest border border-outline-variant/50 p-3 rounded-xl focus:outline-none focus:border-primary text-on-surface transition" placeholder="Type a message..." value={text} onChange={e=>setText(e.target.value)}/><button className="bg-primary hover:bg-primary-fixed-dim text-on-primary px-6 py-3 rounded-xl font-label-sm transition shadow-[0_0_10px_rgba(0,209,255,0.2)]">Send</button></form></>:<div className="flex-1 flex items-center justify-center text-outline font-body-lg">Select a contact to start messaging</div>}</GlassCard></div>);
 };
 
-/* ─── AI Assistant (Teacher) ─── */
-const AIAssistant = () => {
-  const [topic, setTopic] = useState(''); const [explanation, setExplanation] = useState('');
-  const [content, setContent] = useState(''); const [quiz, setQuiz] = useState(null);
-  const [file, setFile] = useState(null); const [visionPrompt, setVisionPrompt] = useState('Analyze this assignment submission and grade it based on standard criteria.'); const [analysis, setAnalysis] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const getExplanation = async () => { if(!topic) return; setLoading(true); try { const r = await axios.post('/api/ai/explain', { topic }); setExplanation(r.data.explanation); } catch(e) { alert('Failed'); } setLoading(false); };
-  const getQuiz = async () => { if(!content) return; setLoading(true); try { const r = await axios.post('/api/ai/quiz', { content, count: 5 }); setQuiz(r.data.questions); } catch(e) { alert('Failed'); } setLoading(false); };
-  const analyzeVision = async () => {
-    if(!file) return; setLoading(true); const fd = new FormData(); fd.append('image', file); fd.append('prompt', visionPrompt);
-    try { const r = await axios.post('/api/ai/vision', fd, { headers: { 'Content-Type': 'multipart/form-data' } }); setAnalysis(r.data.analysis); } catch(e) { alert('Failed'); } setLoading(false);
-  };
-
-  return (
-    <div>
-      <div className="mb-8 relative">
-        <div className="glow-accent -top-10 -left-10"></div>
-        <h2 className="text-3xl font-bold font-h1 text-transparent bg-clip-text bg-gradient-to-r from-secondary to-primary mb-2">Lumina AI Assistant</h2>
-        <p className="font-body-lg text-on-surface-variant">Generate content, create quizzes, and analyze assignments with AI.</p>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-8 mb-8">
-        <GlassCard className="flex flex-col">
-          <h3 className="text-xl font-semibold mb-4 text-on-surface font-h3 flex items-center gap-2"><span className="material-symbols-outlined text-primary">menu_book</span> Content Explainer</h3>
-          <input placeholder="Topic (e.g., Photosynthesis)" className="w-full bg-surface-container-highest border border-outline-variant/50 p-3 rounded-lg text-on-surface focus:border-primary transition mb-4" value={topic} onChange={e=>setTopic(e.target.value)}/>
-          <button onClick={getExplanation} disabled={loading} className="bg-primary hover:bg-primary-fixed-dim text-on-primary py-2 px-6 rounded-lg font-label-sm transition disabled:opacity-50">Generate Explanation</button>
-          {explanation && <div className="mt-4 p-4 bg-surface-container-low rounded-lg border border-outline-variant/30 text-on-surface whitespace-pre-line text-sm max-h-64 overflow-y-auto">{explanation}</div>}
-        </GlassCard>
-
-        <GlassCard className="flex flex-col">
-          <h3 className="text-xl font-semibold mb-4 text-on-surface font-h3 flex items-center gap-2"><span className="material-symbols-outlined text-secondary">quiz</span> Quiz Generator</h3>
-          <textarea placeholder="Paste study material text here..." rows={3} className="w-full bg-surface-container-highest border border-outline-variant/50 p-3 rounded-lg text-on-surface focus:border-primary transition mb-4" value={content} onChange={e=>setContent(e.target.value)}/>
-          <button onClick={getQuiz} disabled={loading} className="bg-secondary hover:bg-secondary-fixed-dim text-on-secondary py-2 px-6 rounded-lg font-label-sm transition disabled:opacity-50">Generate Quiz</button>
-          {quiz && (
-            <div className="mt-4 p-4 bg-surface-container-low rounded-lg border border-outline-variant/30 text-on-surface text-sm max-h-64 overflow-y-auto space-y-4">
-              {quiz.map((q, i) => (
-                <div key={i}>
-                  <p className="font-semibold">{i+1}. {q.question}</p>
-                  <ul className="pl-4 list-disc text-outline mt-1 space-y-1">
-                    {q.options.map((opt, j) => <li key={j} className={j === q.answer ? 'text-secondary font-medium' : ''}>{opt}</li>)}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-        </GlassCard>
-      </div>
-
-      <GlassCard>
-         <h3 className="text-xl font-semibold mb-4 text-on-surface font-h3 flex items-center gap-2"><span className="material-symbols-outlined text-tertiary-fixed">document_scanner</span> Vision & Grading Assistant</h3>
-         <p className="text-sm text-on-surface-variant mb-4">Upload a student's handwritten assignment or diagram for AI analysis.</p>
-         <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <FileUpload file={file} onFileSelect={setFile} onRemove={()=>setFile(null)} compact={true} />
-              <textarea placeholder="Prompt / Grading criteria..." rows={2} className="w-full bg-surface-container-highest border border-outline-variant/50 p-3 rounded-lg text-on-surface focus:border-primary transition mt-4 mb-4" value={visionPrompt} onChange={e=>setVisionPrompt(e.target.value)}/>
-              <button onClick={analyzeVision} disabled={loading||!file} className="bg-tertiary-fixed hover:bg-tertiary-fixed-dim text-on-tertiary-fixed py-2 px-6 rounded-lg font-label-sm transition disabled:opacity-50 w-full">Analyze Image</button>
-            </div>
-            <div>
-              {analysis ? <div className="p-4 bg-surface-container-low rounded-lg border border-outline-variant/30 text-on-surface whitespace-pre-line text-sm h-full overflow-y-auto">{analysis}</div> : <div className="h-full flex items-center justify-center border border-dashed border-outline-variant/30 rounded-lg text-outline text-sm">Analysis results will appear here</div>}
-            </div>
-         </div>
-      </GlassCard>
-    </div>
-  );
-};
-
 /* ─── Teacher Dashboard Shell ─── */
 const TeacherDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -343,7 +276,6 @@ const TeacherDashboard = () => {
     { key: 'attendance', label: 'Attendance', icon: 'how_to_reg' },
     { key: 'announcements', label: 'Notices', icon: 'campaign' },
     { key: 'chat', label: 'Messages', icon: 'chat' },
-    { key: 'ai', label: 'AI Assistant', icon: 'smart_toy' },
   ];
 
   const renderPage = () => {
@@ -354,7 +286,6 @@ const TeacherDashboard = () => {
       case 'attendance': return <AttendanceMark/>;
       case 'announcements': return <TeacherAnnouncements/>;
       case 'chat': return <ChatPage/>;
-      case 'ai': return <AIAssistant/>;
       default: return <AssignmentsPage/>;
     }
   };
