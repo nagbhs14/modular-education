@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 const GlobalLanding = () => {
-  const [view, setView] = useState('home'); // home | register | login
+  const [view, setView] = useState('home');
   const [form, setForm] = useState({ name: '', subdomain: '', adminName: '', adminUsername: '', adminPassword: '' });
   const [loginSub, setLoginSub] = useState('');
   const [message, setMessage] = useState('');
@@ -29,39 +29,38 @@ const GlobalLanding = () => {
     window.location.href = `http://${sub}.localhost:${window.location.port || 5173}`;
   };
 
+  const Label = ({children}) => <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', fontWeight: 500, color: '#374151' }}>{children}</label>;
+
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0c', color: '#e4e4e7', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: '#fff', color: '#1a1a1a', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
       
-      {/* Header */}
-      <header style={{ borderBottom: '1px solid #2a2a2e', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '32px', height: '32px', background: '#00d1ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#000', fontSize: '14px' }}>E</div>
-          <span style={{ fontWeight: 700, fontSize: '16px', letterSpacing: '1px' }}>EDUCORE OS</span>
+      <header style={{ borderBottom: '1px solid #e5e7eb', padding: '14px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '28px', height: '28px', background: '#2563eb', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#fff', fontSize: '13px' }}>E</div>
+          <span style={{ fontWeight: 600, fontSize: '15px' }}>EduCore</span>
         </div>
         {view !== 'home' && (
-          <button onClick={() => { setView('home'); setError(''); setMessage(''); setResult(null); }} style={{ background: 'none', border: '1px solid #2a2a2e', color: '#a1a1aa', padding: '8px 16px', cursor: 'pointer', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <button onClick={() => { setView('home'); setError(''); setMessage(''); setResult(null); }} className="btn btn-outline" style={{ fontSize: '12px', padding: '6px 14px' }}>
             ← Back
           </button>
         )}
       </header>
 
-      {/* Main */}
       <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
         
         {view === 'home' && (
-          <div style={{ textAlign: 'center', maxWidth: '600px' }}>
-            <h1 style={{ fontSize: '48px', fontWeight: 800, marginBottom: '12px', lineHeight: 1.1 }}>
-              Your Institution,<br />
-              <span style={{ color: '#00d1ff' }}>Digitized.</span>
+          <div style={{ textAlign: 'center', maxWidth: '520px' }}>
+            <h1 style={{ fontSize: '36px', fontWeight: 700, marginBottom: '12px', lineHeight: 1.2, color: '#111827' }}>
+              Manage your tuition center, simply.
             </h1>
-            <p style={{ color: '#71717a', fontSize: '16px', marginBottom: '48px', lineHeight: 1.6 }}>
-              Manage students, attendance, results, notices and communication — all from one platform built for small tuitions and coaching centers.
+            <p style={{ color: '#6b7280', fontSize: '15px', marginBottom: '40px', lineHeight: 1.6 }}>
+              Attendance, results, notices, and student communication — all in one place.
             </p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button onClick={() => setView('register')} className="btn btn-primary" style={{ padding: '14px 32px', fontSize: '14px' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={() => setView('register')} className="btn btn-primary" style={{ padding: '12px 28px', fontSize: '14px' }}>
                 Register New Institution
               </button>
-              <button onClick={() => setView('login')} className="btn btn-secondary" style={{ padding: '14px 32px', fontSize: '14px' }}>
+              <button onClick={() => setView('login')} className="btn btn-outline" style={{ padding: '12px 28px', fontSize: '14px' }}>
                 Login to Existing
               </button>
             </div>
@@ -69,72 +68,50 @@ const GlobalLanding = () => {
         )}
 
         {view === 'register' && (
-          <div style={{ width: '100%', maxWidth: '480px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>Register Your Institution</h2>
-            <p style={{ color: '#71717a', marginBottom: '32px', fontSize: '13px' }}>Set up your digital campus in seconds.</p>
+          <div style={{ width: '100%', maxWidth: '420px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '4px' }}>Register Your Institution</h2>
+            <p style={{ color: '#6b7280', marginBottom: '28px', fontSize: '13px' }}>Set up your digital campus in seconds.</p>
 
             {result ? (
-              <div style={{ background: '#111114', border: '1px solid #2a2a2e', padding: '32px' }}>
-                <div style={{ color: '#22c55e', fontWeight: 700, fontSize: '16px', marginBottom: '16px' }}>✓ {message}</div>
-                <div style={{ marginBottom: '24px' }}>
-                  <label style={{ color: '#71717a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>Admin Portal</label>
-                  <a href={result.adminLoginUrl} style={{ color: '#00d1ff', wordBreak: 'break-all', fontSize: '14px' }}>{result.adminLoginUrl}</a>
+              <div className="card" style={{ padding: '28px' }}>
+                <p style={{ color: '#15803d', fontWeight: 600, marginBottom: '20px' }}>✓ {message}</p>
+                <div style={{ marginBottom: '20px' }}>
+                  <Label>Admin Portal</Label>
+                  <a href={result.adminLoginUrl} style={{ color: '#2563eb', wordBreak: 'break-all', fontSize: '13px' }}>{result.adminLoginUrl}</a>
                 </div>
-                <div style={{ marginBottom: '24px' }}>
-                  <label style={{ color: '#71717a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '4px' }}>Student Login Link</label>
-                  <div style={{ background: '#18181b', border: '1px solid #3a3a3e', padding: '12px', color: '#00d1ff', wordBreak: 'break-all', fontSize: '13px', fontFamily: 'monospace' }}>
+                <div style={{ marginBottom: '20px' }}>
+                  <Label>Student Login Link</Label>
+                  <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '6px', padding: '10px 12px', color: '#374151', wordBreak: 'break-all', fontSize: '13px', fontFamily: 'monospace' }}>
                     {result.studentLoginUrl}
                   </div>
-                  <p style={{ color: '#71717a', fontSize: '11px', marginTop: '6px' }}>Share this link with your students so they can log in.</p>
+                  <p style={{ color: '#9ca3af', fontSize: '11px', marginTop: '4px' }}>Share this link with your students.</p>
                 </div>
                 <button onClick={() => window.location.href = result.adminLoginUrl} className="btn btn-primary" style={{ width: '100%' }}>
                   Go to Admin Portal →
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                  <label style={{ color: '#71717a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>Institution Name</label>
-                  <input className="field" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Sharma Coaching Center" required />
-                </div>
-                <div>
-                  <label style={{ color: '#71717a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>Subdomain Code</label>
-                  <input className="field" value={form.subdomain} onChange={e => setForm({...form, subdomain: e.target.value})} placeholder="e.g. sharmacoaching" required />
-                  <p style={{ color: '#3a3a3e', fontSize: '11px', marginTop: '4px' }}>{form.subdomain ? form.subdomain.toLowerCase().replace(/[^a-z0-9]/g, '') : '...'}.localhost</p>
-                </div>
-                <div style={{ borderTop: '1px solid #2a2a2e', paddingTop: '16px', marginTop: '8px' }}>
-                  <p style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '12px', fontWeight: 600 }}>ADMIN ACCOUNT</p>
-                </div>
-                <div>
-                  <label style={{ color: '#71717a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>Your Name</label>
-                  <input className="field" value={form.adminName} onChange={e => setForm({...form, adminName: e.target.value})} placeholder="e.g. Rajesh Sharma" required />
-                </div>
-                <div>
-                  <label style={{ color: '#71717a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>Admin Username</label>
-                  <input className="field" value={form.adminUsername} onChange={e => setForm({...form, adminUsername: e.target.value})} placeholder="e.g. rajesh" required />
-                </div>
-                <div>
-                  <label style={{ color: '#71717a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>Admin Password</label>
-                  <input className="field" type="password" value={form.adminPassword} onChange={e => setForm({...form, adminPassword: e.target.value})} placeholder="••••••••" required />
-                </div>
-                {error && <p style={{ color: '#ef4444', fontSize: '13px' }}>{error}</p>}
-                <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }}>Create Institution</button>
+              <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div><Label>Institution Name</Label><input className="field" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Sharma Coaching Center" required /></div>
+                <div><Label>Subdomain Code</Label><input className="field" value={form.subdomain} onChange={e => setForm({...form, subdomain: e.target.value})} placeholder="e.g. sharmacoaching" required /><p style={{ color: '#9ca3af', fontSize: '11px', marginTop: '3px' }}>{form.subdomain ? form.subdomain.toLowerCase().replace(/[^a-z0-9]/g, '') : '...'}.localhost</p></div>
+                <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '14px', marginTop: '4px' }}><p style={{ color: '#6b7280', fontSize: '12px', fontWeight: 600, marginBottom: '10px' }}>ADMIN ACCOUNT</p></div>
+                <div><Label>Your Name</Label><input className="field" value={form.adminName} onChange={e => setForm({...form, adminName: e.target.value})} placeholder="e.g. Rajesh Sharma" required /></div>
+                <div><Label>Admin Username</Label><input className="field" value={form.adminUsername} onChange={e => setForm({...form, adminUsername: e.target.value})} placeholder="e.g. rajesh" required /></div>
+                <div><Label>Admin Password</Label><input className="field" type="password" value={form.adminPassword} onChange={e => setForm({...form, adminPassword: e.target.value})} placeholder="••••••••" required /></div>
+                {error && <p style={{ color: '#dc2626', fontSize: '13px' }}>{error}</p>}
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '4px' }}>Create Institution</button>
               </form>
             )}
           </div>
         )}
 
         {view === 'login' && (
-          <div style={{ width: '100%', maxWidth: '400px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>Login to Your Institution</h2>
-            <p style={{ color: '#71717a', marginBottom: '32px', fontSize: '13px' }}>Enter your institution code to access the admin portal.</p>
-            <form onSubmit={handleGoToPortal} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ color: '#71717a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>Institution Code (Subdomain)</label>
-                <input className="field" value={loginSub} onChange={e => setLoginSub(e.target.value)} placeholder="e.g. sharmacoaching" required />
-                <p style={{ color: '#3a3a3e', fontSize: '11px', marginTop: '4px' }}>{loginSub ? loginSub.toLowerCase().replace(/[^a-z0-9]/g, '') : '...'}.localhost</p>
-              </div>
-              {error && <p style={{ color: '#ef4444', fontSize: '13px' }}>{error}</p>}
+          <div style={{ width: '100%', maxWidth: '380px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '4px' }}>Login to Your Institution</h2>
+            <p style={{ color: '#6b7280', marginBottom: '28px', fontSize: '13px' }}>Enter your institution code to access the admin portal.</p>
+            <form onSubmit={handleGoToPortal} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div><Label>Institution Code (Subdomain)</Label><input className="field" value={loginSub} onChange={e => setLoginSub(e.target.value)} placeholder="e.g. sharmacoaching" required /><p style={{ color: '#9ca3af', fontSize: '11px', marginTop: '3px' }}>{loginSub ? loginSub.toLowerCase().replace(/[^a-z0-9]/g, '') : '...'}.localhost</p></div>
+              {error && <p style={{ color: '#dc2626', fontSize: '13px' }}>{error}</p>}
               <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Go to Admin Portal →</button>
             </form>
           </div>
@@ -142,9 +119,8 @@ const GlobalLanding = () => {
 
       </main>
 
-      {/* Footer */}
-      <footer style={{ borderTop: '1px solid #2a2a2e', padding: '16px 32px', textAlign: 'center', color: '#3a3a3e', fontSize: '11px' }}>
-        © {new Date().getFullYear()} EduCore OS — Built for small tuitions and coaching centers.
+      <footer style={{ borderTop: '1px solid #e5e7eb', padding: '14px 32px', textAlign: 'center', color: '#9ca3af', fontSize: '11px' }}>
+        Powered by EduCore
       </footer>
     </div>
   );

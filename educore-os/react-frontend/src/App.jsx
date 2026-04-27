@@ -2,11 +2,9 @@ import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 
-// Contexts
 export const TenantContext = createContext();
 export const AuthContext = createContext();
 
-// Pages
 import GlobalLanding from './pages/GlobalLanding';
 import AdminLogin from './pages/AdminLogin';
 import StudentLogin from './pages/StudentLogin';
@@ -39,18 +37,35 @@ function App() {
       const apiUrl = `http://${host}:3000`;
       axios.defaults.baseURL = apiUrl;
 
-      // Check which token exists
+      // Fetch tenant info (public endpoint)
+      let tenantInfo = { subdomain };
+      try {
+        const tRes = await axios.get(`http://localhost:3000/tenants/check/${subdomain}`);
+        tenantInfo = tRes.data;
+      } catch(e) { /* tenant might not exist yet */ }
+
       const adminToken = localStorage.getItem(`admin_token_${subdomain}`);
       const studentToken = localStorage.getItem(`student_token_${subdomain}`);
       const token = adminToken || studentToken;
 
       if (token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const userPayload = JSON.parse(atob(token.split('.')[1]));
-        setUser({ ...userPayload, tokenType: adminToken ? 'admin' : 'student' });
+        try {
+          const userPayload = JSON.parse(atob(token.split('.')[1]));
+          // Check if token is expired
+          if (userPayload.exp * 1000 < Date.now()) {
+            localStorage.removeItem(`admin_token_${subdomain}`);
+            localStorage.removeItem(`student_token_${subdomain}`);
+          } else {
+            setUser({ ...userPayload, tokenType: adminToken ? 'admin' : 'student' });
+          }
+        } catch(e) {
+          localStorage.removeItem(`admin_token_${subdomain}`);
+          localStorage.removeItem(`student_token_${subdomain}`);
+        }
       }
 
-      setTenant({ subdomain });
+      setTenant(tenantInfo);
     } catch(err) {
       console.error(err);
       setTenant(null);
@@ -59,55 +74,44 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    determineTenant();
-  }, []);
+  useEffect(() => { determineTenant(); }, []);
 
   const loginAdmin = (token) => {
-    const host = window.location.hostname;
-    const sub = host.split('.')[0];
+    const sub = window.location.hostname.split('.')[0];
     localStorage.setItem(`admin_token_${sub}`, token);
     window.location.href = '/admin';
   };
 
   const loginStudent = (token) => {
-    const host = window.location.hostname;
-    const sub = host.split('.')[0];
+    const sub = window.location.hostname.split('.')[0];
     localStorage.setItem(`student_token_${sub}`, token);
     window.location.href = '/student';
   };
 
   const logout = () => {
-    const host = window.location.hostname;
-    const sub = host.split('.')[0];
+    const sub = window.location.hostname.split('.')[0];
     localStorage.removeItem(`admin_token_${sub}`);
     localStorage.removeItem(`student_token_${sub}`);
+    delete axios.defaults.headers.common['Authorization'];
     window.location.href = '/';
   };
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0c', color: '#e4e4e7', fontFamily: 'Inter, sans-serif' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>EDUCORE OS</div>
-          <div style={{ color: '#71717a', fontSize: '13px' }}>Loading...</div>
-        </div>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', color: '#1a1a1a', fontFamily: "'Inter', sans-serif" }}>
+        <div style={{ color: '#9ca3af', fontSize: '13px' }}>Loading...</div>
       </div>
     );
   }
 
-  // Global landing (no subdomain)
-  if (isGlobal) {
-    return <GlobalLanding />;
-  }
+  if (isGlobal) return <GlobalLanding />;
 
-  // 404 — tenant not found
   if (!tenant) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0c', color: '#e4e4e7', fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', color: '#1a1a1a', fontFamily: "'Inter', sans-serif" }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', fontWeight: 800, color: '#ef4444' }}>404</div>
-          <div style={{ color: '#71717a', marginTop: '8px' }}>Institution not found</div>
+          <div style={{ fontSize: '36px', fontWeight: 700, color: '#dc2626' }}>404</div>
+          <div style={{ color: '#6b7280', marginTop: '4px' }}>Institution not found</div>
         </div>
       </div>
     );
@@ -118,34 +122,18 @@ function App() {
       <AuthContext.Provider value={{ user, loginAdmin, loginStudent, logout }}>
         <Router>
           <Routes>
-            {/* Admin login page */}
             <Route path="/" element={
-              user && (user.role === 'admin' || user.role === 'teacher')
-                ? <Navigate to="/admin" />
-                : <AdminLogin />
+              user && (user.role === 'admin' || user.role === 'teacher') ? <Navigate to="/admin" /> : <AdminLogin />
             } />
-
-            {/* Student login page */}
             <Route path="/student-login" element={
-              user && user.role === 'student'
-                ? <Navigate to="/student" />
-                : <StudentLogin />
+              user && user.role === 'student' ? <Navigate to="/student" /> : <StudentLogin />
             } />
-
-            {/* Admin dashboard (admin or teacher) */}
             <Route path="/admin/*" element={
-              user && (user.role === 'admin' || user.role === 'teacher')
-                ? <AdminDashboard />
-                : <Navigate to="/" />
+              user && (user.role === 'admin' || user.role === 'teacher') ? <AdminDashboard /> : <Navigate to="/" />
             } />
-
-            {/* Student dashboard */}
             <Route path="/student/*" element={
-              user && user.role === 'student'
-                ? <StudentDashboard />
-                : <Navigate to="/student-login" />
+              user && user.role === 'student' ? <StudentDashboard /> : <Navigate to="/student-login" />
             } />
-
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>

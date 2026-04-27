@@ -20,47 +20,43 @@ const AdminLogin = () => {
     }
   };
 
-  const studentLink = `http://${tenant?.subdomain}.localhost:${window.location.port || 5173}/student-login`;
+  const displayName = tenant?.name || tenant?.subdomain || 'Institution';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0c', display: 'flex', flexDirection: 'column', fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <header style={{ borderBottom: '1px solid #2a2a2e', padding: '16px 32px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ width: '32px', height: '32px', background: '#00d1ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#000', fontSize: '14px' }}>E</div>
-        <span style={{ fontWeight: 700, fontSize: '16px', letterSpacing: '1px', color: '#e4e4e7' }}>EDUCORE OS</span>
-        <span style={{ color: '#2a2a2e', margin: '0 4px' }}>|</span>
-        <span style={{ color: '#71717a', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Admin Portal</span>
+    <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column', fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <header style={{ borderBottom: '1px solid #e5e7eb', padding: '14px 32px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ width: '28px', height: '28px', background: '#2563eb', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#fff', fontSize: '13px' }}>{displayName.charAt(0)}</div>
+        <span style={{ fontWeight: 600, fontSize: '15px', color: '#111827' }}>{displayName}</span>
       </header>
 
       <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
-        <div style={{ width: '100%', maxWidth: '380px' }}>
-          <div style={{ marginBottom: '32px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#e4e4e7', marginBottom: '8px' }}>Admin Login</h1>
-            <p style={{ color: '#71717a', fontSize: '13px' }}>
-              Institution: <span style={{ color: '#00d1ff' }}>{tenant?.subdomain}</span>
-            </p>
-          </div>
+        <div style={{ width: '100%', maxWidth: '340px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '4px', color: '#111827' }}>Admin Login</h1>
+          <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '28px' }}>{displayName}</p>
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <label style={{ color: '#71717a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>Username</label>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', fontWeight: 500, color: '#374151' }}>Username</label>
               <input className="field" value={username} onChange={e => setUsername(e.target.value)} required autoFocus />
             </div>
             <div>
-              <label style={{ color: '#71717a', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>Password</label>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', fontWeight: 500, color: '#374151' }}>Password</label>
               <input className="field" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
-            {error && <p style={{ color: '#ef4444', fontSize: '13px' }}>{error}</p>}
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }}>Login</button>
+            {error && <p style={{ color: '#dc2626', fontSize: '13px' }}>{error}</p>}
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '4px' }}>Login</button>
           </form>
 
-          <div style={{ marginTop: '32px', padding: '16px', border: '1px solid #2a2a2e', background: '#111114' }}>
-            <p style={{ color: '#71717a', fontSize: '12px', marginBottom: '4px' }}>Are you a student?</p>
-            <a href={`/student-login`} style={{ color: '#00d1ff', fontSize: '13px' }}>
-              Go to Student Login →
-            </a>
+          <div style={{ marginTop: '28px', padding: '14px', border: '1px solid #e5e7eb', borderRadius: '6px', background: '#f9fafb' }}>
+            <p style={{ color: '#6b7280', fontSize: '12px', marginBottom: '2px' }}>Are you a student?</p>
+            <a href="/student-login" style={{ color: '#2563eb', fontSize: '13px', textDecoration: 'none' }}>Go to Student Login →</a>
           </div>
         </div>
       </main>
+
+      <footer style={{ borderTop: '1px solid #e5e7eb', padding: '14px 32px', textAlign: 'center', color: '#9ca3af', fontSize: '11px' }}>
+        Powered by EduCore
+      </footer>
     </div>
   );
 };
