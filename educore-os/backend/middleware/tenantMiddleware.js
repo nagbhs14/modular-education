@@ -19,6 +19,24 @@ const tenantMiddleware = (req, res, next) => {
     return res.status(404).json({ error: 'Tenant not found.' });
   }
 
+  // Fetch subscription plan details
+  const planDetails = db.prepare(`
+    SELECT sp.name, sp.display_name, sp.max_students, sp.max_modules, sp.price_monthly, sp.features, ts.status
+    FROM tenant_subscriptions ts
+    JOIN subscription_plans sp ON ts.plan_id = sp.id
+    WHERE ts.tenant_id = ?
+  `).get(tenant.id);
+
+  if (planDetails) {
+    try {
+      planDetails.features = JSON.parse(planDetails.features);
+    } catch(e) {
+      planDetails.features = [];
+    }
+  }
+
+  tenant.plan = planDetails || { name: 'free', max_modules: 5, features: [] };
+  
   req.tenant = tenant; // Inject tenant context into request
   next();
 };

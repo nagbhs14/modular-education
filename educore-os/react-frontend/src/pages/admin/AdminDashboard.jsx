@@ -90,11 +90,64 @@ const SisPage = () => {
 
 /* ─── Marketplace ─── */
 const MarketplacePage = () => {
-  const [modules, setModules] = useState([]);
-  const load = () => axios.get('/api/marketplace').then(r => setModules(r.data));
+  const [data, setData] = useState({ modules: [], plan: null, activeCount: 0 });
+  const load = () => axios.get('/api/marketplace').then(r => setData(r.data));
   useEffect(() => { load(); }, []);
-  const toggle = async (mod) => { try { await axios.put(`/api/marketplace/${mod.name}`, { enabled: !mod.enabled }); load(); } catch(e) { alert(e.response?.data?.error||'Failed'); } };
-  return (<div><h2 className="text-3xl font-bold mb-6 font-h1 text-primary">App Marketplace</h2><div className="grid md:grid-cols-3 gap-6">{modules.map(m=>(<GlassCard key={m.name} className="flex flex-col"><div className="flex justify-between items-start mb-4"><h3 className="text-xl font-semibold text-on-surface font-h3">{m.label}</h3><div className={`w-3 h-3 rounded-full ${m.enabled?'bg-primary shadow-[0_0_10px_rgba(0,209,255,0.5)]':'bg-surface-container-highest border border-outline-variant/50'}`}></div></div><p className="text-on-surface-variant text-sm h-12 flex-1">{m.description}</p><button onClick={()=>toggle(m)} disabled={m.core} className={`mt-6 w-full py-2.5 rounded-lg font-label-sm text-label-sm transition ${m.core?'bg-surface-container text-outline cursor-not-allowed':m.enabled?'bg-error-container/20 text-error hover:bg-error-container/30':'bg-primary text-on-primary hover:bg-primary-fixed-dim'}`}>{m.core?'Core Module':m.enabled?'Disable':'Enable'}</button></GlassCard>))}</div></div>);
+  const toggle = async (mod) => { 
+    try { 
+      await axios.put(`/api/marketplace/${mod.name}`, { enabled: !mod.enabled }); 
+      load(); 
+    } catch(e) { 
+      alert(e.response?.data?.error||'Failed'); 
+    } 
+  };
+  
+  const { modules, plan, activeCount } = data;
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold font-h1 text-primary">App Marketplace</h2>
+        {plan && (
+          <div className="bg-surface-container-low border border-outline-variant/30 px-4 py-2 rounded-xl flex items-center gap-4">
+            <div>
+              <div className="text-xs text-outline font-label-sm uppercase tracking-wider">Current Plan</div>
+              <div className="font-semibold text-secondary capitalize">{plan.display_name}</div>
+            </div>
+            <div className="h-8 w-px bg-outline-variant/30"></div>
+            <div>
+              <div className="text-xs text-outline font-label-sm uppercase tracking-wider">Module Limit</div>
+              <div className="font-semibold text-on-surface">
+                {activeCount} / {plan.max_modules === -1 ? 'Unlimited' : plan.max_modules}
+              </div>
+            </div>
+            <button className="ml-2 bg-primary-container/20 text-primary hover:bg-primary hover:text-on-primary transition-colors px-3 py-1.5 rounded-lg text-sm font-label-sm">Upgrade</button>
+          </div>
+        )}
+      </div>
+      <div className="grid md:grid-cols-3 gap-6">
+        {modules.map(m=>(
+          <GlassCard key={m.name} className="flex flex-col">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-xl font-semibold text-on-surface font-h3">{m.label}</h3>
+              <div className={`w-3 h-3 rounded-full ${m.enabled?'bg-primary shadow-[0_0_10px_rgba(0,209,255,0.5)]':'bg-surface-container-highest border border-outline-variant/50'}`}></div>
+            </div>
+            <p className="text-on-surface-variant text-sm h-12 flex-1">{m.description}</p>
+            <button 
+              onClick={()=>toggle(m)} 
+              disabled={m.core} 
+              className={`mt-6 w-full py-2.5 rounded-lg font-label-sm text-label-sm transition ${
+                m.core?'bg-surface-container text-outline cursor-not-allowed':
+                m.enabled?'bg-error-container/20 text-error hover:bg-error-container/30':'bg-primary text-on-primary hover:bg-primary-fixed-dim'
+              }`}
+            >
+              {m.core?'Core Module':m.enabled?'Disable':'Enable'}
+            </button>
+          </GlassCard>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 /* ─── Announcements ─── */
