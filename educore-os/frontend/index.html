@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduCore OS</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Main Global View (Shopify style directory) -->
+    <div id="global-view" class="view hidden">
+        <nav class="navbar glass">
+            <div class="logo">EduCore OS</div>
+        </nav>
+        
+        <main class="container">
+            <header class="hero">
+                <h1>Platform for Educational Institutions</h1>
+                <p>Create and manage your digital campus seamlessly.</p>
+            </header>
+
+            <section class="tenant-list-section">
+                <h2>Active Institutions</h2>
+                <div id="tenant-list" class="grid">
+                    <!-- Tenants populated via JS -->
+                </div>
+            </section>
+
+            <section class="create-tenant-section">
+                <div class="card glass">
+                    <h2>Launch Your School</h2>
+                    <form id="create-tenant-form">
+                        <div class="input-group">
+                            <label>Institution Name</label>
+                            <input type="text" id="t-name" value="Global Academy" placeholder="E.g. Springfield High" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Subdomain Prefix</label>
+                            <input type="text" id="t-subdomain" value="global" placeholder="E.g. springfield" required>
+                            <small class="hint">Your URL will be `springfield.localhost:3000` or `springfield.educore.os`</small>
+                        </div>
+                        <button type="submit" class="btn primary">Create Institution</button>
+                    </form>
+                    <div id="t-message"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Tenant Portal View -->
+    <div id="tenant-view" class="view hidden">
+        <nav class="navbar glass">
+            <div id="school-logo" class="logo">School Name</div>
+            <div id="auth-controls">
+                <button id="btn-logout" class="btn outline hidden">Logout</button>
+            </div>
+        </nav>
+
+        <main class="container">
+            <!-- Login State -->
+            <div id="login-section" class="card glass center-panel">
+                <h2>Portal Login</h2>
+                <form id="login-form">
+                    <div class="input-group">
+                        <label>Username</label>
+                        <input type="text" id="login-username" value="admin" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="login-password" value="password" required>
+                    </div>
+                    <button type="submit" class="btn primary w-full">Login</button>
+                </form>
+                <div id="login-error" class="error-msg"></div>
+            </div>
+
+            <!-- Dashboard State -->
+            <div id="dashboard-section" class="hidden">
+                <header class="hero sm">
+                    <h1 id="welcome-msg">Welcome</h1>
+                </header>
+                
+                <div class="dashboard-grid">
+                    <!-- Dynamic Modules inserted here -->
+                    <div id="modules-container" class="grid"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="./js/app.js"></script>
+</body>
+</html>
