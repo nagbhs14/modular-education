@@ -10,7 +10,8 @@ router.use(authMiddleware);
 router.get('/', (req, res) => {
     // If student, get only their results
     if (req.user.role === 'student') {
-        const student = db.prepare('SELECT id FROM students WHERE user_id = ?').get(req.user.userId);
+        const student = db.prepare('SELECT id FROM students WHERE user_id = ? AND tenant_id = ?').get(req.user.userId, req.tenant.id);
+        if (!student) return res.json([]);
         const results = db.prepare(`
             SELECT r.exam_name, r.score, r.grades, r.published 
             FROM results r
@@ -21,9 +22,10 @@ router.get('/', (req, res) => {
     
     // Admin/Teacher get all results
     const results = db.prepare(`
-        SELECT r.id, s.name, s.system_uid, r.exam_name, r.score, r.grades, r.published 
+        SELECT r.id, u.name, st.system_uid, r.exam_name, r.score, r.grades, r.published 
         FROM results r
-        JOIN students s ON r.student_id = s.id
+        JOIN students st ON r.student_id = st.id
+        JOIN users u ON st.user_id = u.id
         WHERE r.tenant_id = ?
     `).all(req.tenant.id);
     res.json(results);

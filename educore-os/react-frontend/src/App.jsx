@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 
-// Context
-export const TenantContext = React.createContext();
-export const AuthContext = React.createContext();
+// Contexts
+export const TenantContext = createContext();
+export const AuthContext = createContext();
 
-// Component Imports
+// Pages
 import GlobalLanding from './pages/GlobalLanding';
-import TenantPortal from './pages/TenantPortal';
+import AdminLogin from './pages/AdminLogin';
+import StudentLogin from './pages/StudentLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
 
 function App() {
@@ -36,29 +36,24 @@ function App() {
     }
 
     try {
-      // In local dev, API is always on port 3000
       const apiUrl = `http://${host}:3000`;
       axios.defaults.baseURL = apiUrl;
 
-      // To fetch tenant info before login, we probably need a public public endpoint
-      // For now, if we have a token, we grab settings
-      const token = localStorage.getItem(`token_${subdomain}`);
+      // Check which token exists
+      const adminToken = localStorage.getItem(`admin_token_${subdomain}`);
+      const studentToken = localStorage.getItem(`student_token_${subdomain}`);
+      const token = adminToken || studentToken;
+
       if (token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const res = await axios.get('/api/settings');
-        setTenant(res.data);
-        
-        // Also decode token or fetch user me
-        // Simple mock decoding for prototype UI:
         const userPayload = JSON.parse(atob(token.split('.')[1]));
-        setUser(userPayload);
-      } else {
-        // If no token, we just know the subdomain but need public settings
-        setTenant({ subdomain });
+        setUser({ ...userPayload, tokenType: adminToken ? 'admin' : 'student' });
       }
+
+      setTenant({ subdomain });
     } catch(err) {
       console.error(err);
-      setTenant(null); // Tenant not found
+      setTenant(null);
     } finally {
       setLoading(false);
     }
@@ -68,64 +63,91 @@ function App() {
     determineTenant();
   }, []);
 
-  const login = (token) => {
+  const loginAdmin = (token) => {
     const host = window.location.hostname;
     const sub = host.split('.')[0];
-    localStorage.setItem(`token_${sub}`, token);
-    window.location.reload();
+    localStorage.setItem(`admin_token_${sub}`, token);
+    window.location.href = '/admin';
+  };
+
+  const loginStudent = (token) => {
+    const host = window.location.hostname;
+    const sub = host.split('.')[0];
+    localStorage.setItem(`student_token_${sub}`, token);
+    window.location.href = '/student';
   };
 
   const logout = () => {
     const host = window.location.hostname;
     const sub = host.split('.')[0];
-    localStorage.removeItem(`token_${sub}`);
-    window.location.reload();
+    localStorage.removeItem(`admin_token_${sub}`);
+    localStorage.removeItem(`student_token_${sub}`);
+    window.location.href = '/';
   };
 
-  if (loading) return <div>Loading EduCore OS...</div>;
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0c', color: '#e4e4e7', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>EDUCORE OS</div>
+          <div style={{ color: '#71717a', fontSize: '13px' }}>Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
-  // Render Global Landing
+  // Global landing (no subdomain)
   if (isGlobal) {
     return <GlobalLanding />;
   }
 
-  // Render Tenant Route
-  if (!tenant) return <div>404 - Institution Not Found</div>;
+  // 404 — tenant not found
+  if (!tenant) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0c', color: '#e4e4e7', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', fontWeight: 800, color: '#ef4444' }}>404</div>
+          <div style={{ color: '#71717a', marginTop: '8px' }}>Institution not found</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <TenantContext.Provider value={tenant}>
-      <AuthContext.Provider value={{ user, login, logout }}>
+      <AuthContext.Provider value={{ user, loginAdmin, loginStudent, logout }}>
         <Router>
-          <div className="app-container" style={{ minHeight: '100vh', backgroundColor: '#0f172a', color: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
-            <Routes>
-              {!user ? (
-                <Route path="*" element={<TenantPortal />} />
-              ) : (
-                <>
-                  <Route path="/" element={
-                    user.role === 'admin' ? <Navigate to="/admin" /> :
-                    user.role === 'teacher' ? <Navigate to="/teacher" /> :
-                    user.role === 'student' ? <Navigate to="/student" /> :
-                    <Navigate to="/unauthorized" />
-                  } />
-                  
-                  <Route path="/admin/*" element={user.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
-                  <Route path="/teacher/*" element={user.role === 'teacher' ? <TeacherDashboard /> : <Navigate to="/" />} />
-                  <Route path="/student/*" element={user.role === 'student' ? <StudentDashboard /> : <Navigate to="/" />} />
-                  
-                  <Route path="/unauthorized" element={
-                    <div className="flex flex-col items-center justify-center min-h-screen">
-                      <h2 className="text-2xl font-bold mb-4">Unauthorized Access</h2>
-                      <p className="text-slate-400 mb-6">You don't have permission to access this area or your role is unknown.</p>
-                      <button onClick={logout} className="bg-purple-600 px-6 py-2 rounded-lg">Logout & Try Again</button>
-                    </div>
-                  } />
-                  
-                  <Route path="*" element={<Navigate to="/" />} />
-                </>
-              )}
-            </Routes>
-          </div>
+          <Routes>
+            {/* Admin login page */}
+            <Route path="/" element={
+              user && (user.role === 'admin' || user.role === 'teacher')
+                ? <Navigate to="/admin" />
+                : <AdminLogin />
+            } />
+
+            {/* Student login page */}
+            <Route path="/student-login" element={
+              user && user.role === 'student'
+                ? <Navigate to="/student" />
+                : <StudentLogin />
+            } />
+
+            {/* Admin dashboard (admin or teacher) */}
+            <Route path="/admin/*" element={
+              user && (user.role === 'admin' || user.role === 'teacher')
+                ? <AdminDashboard />
+                : <Navigate to="/" />
+            } />
+
+            {/* Student dashboard */}
+            <Route path="/student/*" element={
+              user && user.role === 'student'
+                ? <StudentDashboard />
+                : <Navigate to="/student-login" />
+            } />
+
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
         </Router>
       </AuthContext.Provider>
     </TenantContext.Provider>
